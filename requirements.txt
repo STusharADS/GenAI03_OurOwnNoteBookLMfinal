@@ -1,0 +1,9 @@
+# requirements.txt
+streamlit
+langchain
+langchain-openai
+langchain-community
+langchain-text-splitters
+chromadb
+pypdf
+python-dotenv
