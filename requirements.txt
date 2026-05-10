@@ -7,3 +7,4 @@ langchain-text-splitters
 chromadb
 pypdf
 python-dotenv
+protobuf==4.25.3
