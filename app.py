@@ -21,8 +21,8 @@ st.markdown(
         --green-2: #0f6b4d;
         --green-3: #19a06c;
         --green-4: #d8f5e6;
-        --ink-1: #0b1b14;
-        --ink-2: #244236;
+        --ink-1: #000000;
+        --ink-2: #000000;
         --paper-1: #f4fbf7;
         --paper-2: #e7f5ee;
         --glow: rgba(25, 160, 108, 0.25);
@@ -44,12 +44,12 @@ st.markdown(
 
     h1, h2, h3 {
         font-family: "Source Serif 4", "Georgia", serif;
-        color: var(--green-1);
+        color: var(--ink-1);
         letter-spacing: 0.3px;
     }
 
     .stCaption {
-        color: var(--ink-2);
+        color: var(--ink-1);
         font-size: 1rem;
     }
 
@@ -77,10 +77,20 @@ st.markdown(
         box-shadow: 0 6px 18px rgba(11, 61, 46, 0.06);
     }
 
+    .stTextInput > div > div > input {
+        background: #0b3d2e;
+        color: #ffffff;
+        border: 1px solid rgba(11, 61, 46, 0.6);
+    }
+
+    .stTextInput > div > div > input::placeholder {
+        color: rgba(255, 255, 255, 0.75);
+    }
+
     .stFileUploader label,
     .stTextInput label,
     .stMarkdown label {
-        color: var(--ink-2);
+        color: var(--ink-1);
         font-weight: 600;
     }
 
