@@ -123,7 +123,11 @@ st.markdown(
 )
 
 st.title("NotebookLM-style RAG (Python)")
-st.caption("Upload a PDF or TXT, index it, then ask questions grounded in the document.")
+st.caption(
+    "Upload a PDF or TXT, index it, then ask questions grounded in the document. "
+    "Uses Corrective RAG: retrieved chunks are graded for relevance and refined "
+    "before the answer is generated."
+)
 
 if "vectorstore" not in st.session_state:
     st.session_state.vectorstore = None
@@ -169,17 +173,53 @@ if ask_clicked:
     elif not query.strip():
         st.error("Please enter a question.")
     else:
-        with st.spinner("Retrieving and generating answer..."):
-            answer, chunks = rag.answer_query(query, st.session_state.vectorstore, k=3)
+        with st.spinner("Retrieving, grading, refining, and generating answer..."):
+            answer, chunks, info = rag.answer_query(
+                query, st.session_state.vectorstore, k=3
+            )
 
         st.markdown("### Answer")
         st.write(answer)
 
+        action = info.get("action", "UNKNOWN")
+        action_help = {
+            "CORRECT": "All retrieved chunks were graded relevant.",
+            "AMBIGUOUS": "Some retrieved chunks were irrelevant and dropped.",
+            "INCORRECT": "No retrieved chunk was relevant to the question.",
+        }
+        st.markdown("### Corrective RAG")
+        cols = st.columns(3)
+        cols[0].metric("Action", action)
+        cols[1].metric(
+            "Relevant chunks",
+            f"{info.get('relevant_count', 0)} / {info.get('retrieved_count', 0)}",
+        )
+        cols[2].metric("Refined", "Yes" if info.get("refined_knowledge") else "No")
+        st.caption(action_help.get(action, ""))
+
+        grades = info.get("grades", [])
+        if grades:
+            with st.expander("Relevance grading (per chunk)"):
+                for g in grades:
+                    mark = "✅" if g.get("relevant") else "❌"
+                    reason = g.get("reason") or "—"
+                    st.write(f"{mark} Chunk {g.get('index', 0) + 1}: {reason}")
+
+        refined = info.get("refined_knowledge")
+        if refined:
+            with st.expander("Refined knowledge (sent to the LLM)"):
+                st.write(refined)
+
         st.markdown("### Retrieved Chunks (Grounding)")
+        relevant_idx = {g["index"] for g in grades if g.get("relevant")}
         for i, doc in enumerate(chunks, start=1):
             meta = doc.metadata or {}
             source = meta.get("source", st.session_state.indexed_file or "document")
             page = meta.get("page")
-            header = f"Chunk {i} - {source}" + (f" (page {page})" if page is not None else "")
+            status = "kept" if (i - 1) in relevant_idx else "dropped"
+            header = (
+                f"Chunk {i} [{status}] - {source}"
+                + (f" (page {page})" if page is not None else "")
+            )
             with st.expander(header):
                 st.write(doc.page_content)
